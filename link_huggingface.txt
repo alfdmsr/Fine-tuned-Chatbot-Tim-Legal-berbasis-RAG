@@ -1,0 +1,1 @@
+﻿Link Hugging Face : https://huggingface.co/Saranjana/Llama-3-8b-Legal-RAG

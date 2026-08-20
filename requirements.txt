@@ -1,0 +1,14 @@
+langchain
+langchain-community
+langchain-core
+langchain-text-splitters
+pypdf
+chromadb
+sentence-transformers
+duckduckgo-search
+rank_bm25
+langchain-huggingface
+trl
+peft
+accelerate
+bitsandbytes
