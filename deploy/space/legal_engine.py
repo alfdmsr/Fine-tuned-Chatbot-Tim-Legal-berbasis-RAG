@@ -227,8 +227,21 @@ Jangan mengklaim dokumen pasti masih berlaku; sarankan cek sumber hukum resmi un
 
 class LegalRAG:
     def __init__(self):
+        # Model GPU tetap dimuat saat startup ZeroGPU
         self.generator = LegalGenerator()
-        self.retriever = LegalRetriever(load_passages())
+
+        # Retriever CPU tidak dijalankan saat startup
+        self._retriever = None
+
+    @property
+    def retriever(self) -> LegalRetriever:
+        if self._retriever is None:
+            LOGGER.info("Initializing CPU retriever...")
+            self._retriever = LegalRetriever(
+                load_passages()
+            )
+
+        return self._retriever
 
     def answer(self, question: str) -> str:
         if len(question.strip()) > 2000:
