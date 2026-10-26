@@ -1,0 +1,37 @@
+name: Deploy Legal RAG demo to Hugging Face Spaces
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'deploy/space/**'
+      - 'Document RAG/**'
+      - '.github/workflows/deploy-huggingface-space.yml'
+
+jobs:
+  deploy:
+    if: ${{ vars.HF_SPACE_ID != '' }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - name: Prepare Space assets
+        run: |
+          mkdir -p space_dist
+          cp deploy/space/app.py deploy/space/legal_engine.py deploy/space/requirements.txt deploy/space/README.md space_dist/
+          cp -r 'Document RAG' space_dist/
+      - name: Set up Python and Hugging Face CLI
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install CLI
+        run: pip install 'huggingface_hub[cli]>=0.34,<2'
+      - name: Upload public demo
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+          HF_SPACE_ID: ${{ vars.HF_SPACE_ID }}
+        run: |
+          test -n "$HF_TOKEN" || (echo 'Set GitHub Actions secret HF_TOKEN first.' && exit 1)
+          hf upload "$HF_SPACE_ID" ./space_dist . --repo-type space
