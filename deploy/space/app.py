@@ -10,6 +10,8 @@ import gradio as gr
 from legal_engine import get_rag
 
 logging.basicConfig(level=logging.INFO)
+logging.getLogger("httpx").setLevel(logging.WARNING)
+logging.getLogger("httpcore").setLevel(logging.WARNING)
 
 
 # ZeroGPU requires eager CUDA-model registration at module import time.
@@ -40,6 +42,20 @@ def chat(message: str, history: list[dict]) -> str:
         )
 
 
+@spaces.GPU(duration=15)
+def test_gpu():
+    import torch
+
+    x = torch.ones((4, 4), device="cuda")
+    result = x @ x
+
+    return (
+        f"GPU: {torch.cuda.get_device_name(0)}\n"
+        f"Calculation: {result[0, 0].item()}\n"
+        "STATUS: GPU TEST PASSED"
+    )
+
+
 def build_demo() -> gr.Blocks:
     with gr.Blocks(title="Chatbot Tim Legal | RAG", analytics_enabled=False) as demo:
         gr.Markdown("# ⚖️ Chatbot Tim Legal — Fine-tuned Llama 3 + RAG")
@@ -47,6 +63,20 @@ def build_demo() -> gr.Blocks:
             "Tanyakan isi dokumen hukum Indonesia. Jawaban dibantu pencarian dokumen dan "
             "menampilkan halaman PDF yang diambil sebagai konteks. **Bukan pengganti penasihat hukum.**"
         )
+
+        gr.Markdown("### Diagnostik GPU")
+
+        gpu_output = gr.Textbox(
+            label="GPU Status",
+            interactive=False,
+        )
+
+        gr.Button("Test GPU").click(
+            fn=test_gpu,
+            inputs=[],
+            outputs=gpu_output,
+        )
+
         gr.ChatInterface(
             fn=chat,
             chatbot=gr.Chatbot(height=480),
